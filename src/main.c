@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // Load background image first to get dimensions
+    // Load background image first to get its dimensions and create window at same size
     app.win.win_w = 800;
     app.win.win_h = 600;
     SDL_Surface *bg_surf = IMG_Load("assets/background_jeuvideo.png");
@@ -34,11 +34,12 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Warning: couldn't load background, using defaults\n");
     }
 
-    // Create window with correct dimensions
+    Uint32 win_flags = SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE;
     app.win.win = SDL_CreateWindow("Sous-menu SDL2",
                                    SDL_WINDOWPOS_CENTERED,
                                    SDL_WINDOWPOS_CENTERED,
-                                   app.win.win_w, app.win.win_h, 0);
+                                   app.win.win_w, app.win.win_h,
+                                   win_flags);
     if (!app.win.win) {
         fprintf(stderr, "SDL_CreateWindow Error: %s\n", SDL_GetError());
         core_cleanup(&app);
@@ -70,9 +71,14 @@ int main(int argc, char *argv[]) {
         app.char_y_offset = -10; // default vertical offset (px) — negative moves character lower
         // fixed balloon position (world coordinates)
         app.balloon_x = app.win.win_w / 2;
-        app.balloon_y = app.win.win_h * 0.8f; // place balloon lower (80% down)
+        app.balloon_y = app.win.win_h * 0.92f; // place balloon lower (92% down)
         app.balloon_scale = 0.4f; // make balloon smaller (adjustable)
         app.balloon_triggered = false;
+        // second balloon: place to the left and at same vertical level as the first
+        app.balloon2_x = app.win.win_w * 0.25f;
+        app.balloon2_y = app.balloon_y;
+        app.balloon2_scale = 0.35f;
+        app.balloon2_triggered = false;
         perso_init(&app);
     // place character a bit higher than the bottom
     if (app.run_frame_h[0] > 0) {

@@ -154,12 +154,16 @@ void game_handle_events(App *app) {
             app->mouse_x = e.motion.x;
             app->mouse_y = e.motion.y;
         } else if (e.type == SDL_KEYDOWN) {
-                if (e.key.keysym.sym == SDLK_e) {
-                    app->show_leaderboard = !app->show_leaderboard;
-                    app->show_sub = false;
-                } else {
-                    perso_handle_event(app, &e);
-                }
+            /* toggle leaderboard with 'e' as before; add fullscreen toggle (F11)
+               and minimize ('m') handling. Other keys forwarded to perso handler. */
+            if (e.key.keysym.sym == SDLK_e) {
+                app->show_leaderboard = !app->show_leaderboard;
+                app->show_sub = false;
+            } else if (e.key.keysym.sym == SDLK_m) {
+                SDL_MinimizeWindow(app->win.win);
+            } else {
+                perso_handle_event(app, &e);
+            }
         } else if (e.type == SDL_KEYUP) {
             perso_handle_event(app, &e);
         } else if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON_LEFT) {

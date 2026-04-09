@@ -1,5 +1,6 @@
 #include "perso.h"
 #include "tictactoe.h"
+#include "quiz.h"
 
 void perso_spawn(App *app) {
     if (app->run_frame_w[0] > 0) {
@@ -203,7 +204,33 @@ void perso_render(App *app) {
                 SDL_Rect crect = dst;
                 if (SDL_HasIntersection(&crect, &bdst)) {
                     app->balloon_triggered = true;
+                    fprintf(stderr, "Info: balloon1 collision at char(%d,%d) balloon(%d,%d) - launching tictactoe\n",
+                            (int)app->char_x, app->char_y, bx, by);
                     tictactoe_run(app);
+                    app->char_vx = 0.0f;
+                }
+            }
+        }
+    }
+
+    // draw second balloon if available
+    if (app->tex.balloon) {
+        int bw2 = 0, bh2 = 0;
+        SDL_QueryTexture(app->tex.balloon, NULL, NULL, &bw2, &bh2);
+        if (bw2 > 0 && bh2 > 0) {
+            int bdw2 = (int)(bw2 * app->char_scale * app->balloon2_scale);
+            int bdh2 = (int)((double)bh2 / (double)bw2 * bdw2);
+            int bx2 = (int)app->balloon2_x - bdw2 / 2;
+            int by2 = (int)app->balloon2_y - bdh2 / 2;
+            SDL_Rect bdst2 = {bx2, by2, bdw2, bdh2};
+            SDL_RenderCopy(app->win.ren, app->tex.balloon, NULL, &bdst2);
+            if (!app->balloon2_triggered) {
+                SDL_Rect crect = dst;
+                if (SDL_HasIntersection(&crect, &bdst2)) {
+                    app->balloon2_triggered = true;
+                        fprintf(stderr, "Info: balloon2 collision at char(%d,%d) balloon2(%d,%d) - launching quiz frame\n",
+                            (int)app->char_x, app->char_y, bx2, by2);
+                        quiz_show(app);
                     app->char_vx = 0.0f;
                 }
             }

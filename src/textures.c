@@ -21,8 +21,12 @@ int textures_load(App *app) {
     // Load submenu texture
     app->tex.sub = IMG_LoadTexture(app->win.ren, "assets/sousmenu.png");
 
-    // Load font
-    app->font = TTF_OpenFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 20);
+    // Load font: prefer bundled ItFont-qVv0.ttf if present, otherwise fallback to system font
+    app->font = NULL;
+    app->font = TTF_OpenFont("assets/ItFont-qVv0.ttf", 22);
+    if (!app->font) {
+        app->font = TTF_OpenFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 20);
+    }
     if (!app->font) {
         fprintf(stderr, "Warning: couldn't load font: %s\n", TTF_GetError());
     }

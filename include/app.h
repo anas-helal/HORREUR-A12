@@ -95,6 +95,11 @@ typedef struct {
     float balloon_y;
     float balloon_scale; // multiplier for balloon size
     bool balloon_triggered; // set when collision puzzle has been shown
+    // second balloon (additional)
+    float balloon2_x;
+    float balloon2_y;
+    float balloon2_scale;
+    bool balloon2_triggered;
     // combined animation state (frames across all run sprites)
     bool show_spritesheet;
     bool anim_playing;
