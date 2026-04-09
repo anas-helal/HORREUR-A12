@@ -5,5 +5,6 @@
 
 int scores_load(App *app);
 void scores_render_leaderboard(App *app);
+int scores_save(App *app);
 
 #endif

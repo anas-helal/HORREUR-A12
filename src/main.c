@@ -5,6 +5,7 @@
 #include "scores.h"
 #include "ui.h"
 #include "game.h"
+#include "perso.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <stdio.h>
@@ -57,6 +58,29 @@ int main(int argc, char *argv[]) {
     // Load textures
     if (!textures_load(&app)) {
         fprintf(stderr, "Failed to load textures\n");
+    }
+
+    // Initialize character position and timing
+    app.last_tick = SDL_GetTicks();
+    app.char_x = 0.0f;
+    app.char_speed = 120.0f; // pixels per second
+    app.char_vx = 0.0f;
+    app.char_visible = false; // start hidden until Play clicked
+    app.char_scale = 2.0f; // default make character larger
+        app.char_y_offset = -10; // default vertical offset (px) — negative moves character lower
+        // fixed balloon position (world coordinates)
+        app.balloon_x = app.win.win_w / 2;
+        app.balloon_y = app.win.win_h * 0.8f; // place balloon lower (80% down)
+        app.balloon_scale = 0.4f; // make balloon smaller (adjustable)
+        app.balloon_triggered = false;
+        perso_init(&app);
+    // place character a bit higher than the bottom
+    if (app.run_frame_h[0] > 0) {
+        int ch = (int)(app.run_frame_h[0] * app.char_scale);
+        app.char_y = app.win.win_h - ch - 10 - app.char_y_offset; // apply adjustable offset
+    } else {
+        int ch = (int)(64 * app.char_scale);
+        app.char_y = app.win.win_h - ch - 10 - app.char_y_offset;
     }
 
     // Load audio

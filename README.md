@@ -25,5 +25,6 @@ Execution:
 Comportement:
 - Le programme affiche la `background.png` et un bouton en haut à gauche.
 - Cliquer sur le bouton bascule l'affichage de `sousmenu.png` centré.
+- Quand le personnage est visible, la touche `a` lance l'animation d'attaque.
 
 Si vous souhaitez que le bouton ait une autre position, modifiez `btn_rect` dans `main.c`.

@@ -34,6 +34,16 @@ int scores_load(App *app) {
     return count;
 }
 
+int scores_save(App *app) {
+    FILE *f = fopen("scores.txt", "w");
+    if (!f) return 0;
+    for (int i = 0; i < app->lb.count; i++) {
+        fprintf(f, "%s %d\n", app->lb.scores[i].player, app->lb.scores[i].score);
+    }
+    fclose(f);
+    return 1;
+}
+
 void scores_render_leaderboard(App *app) {
     if (!app->show_leaderboard || !app->tex.sub) return;
 
