@@ -1,61 +1,98 @@
+
+#include "person.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
 #include <stdio.h>
-#include <stdbool.h>
-#include "minimap.h"
+#include <stdlib.h>
 
-int main(int argc, char* args[]) {
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) return 1;
-    IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
+typedef struct { SDL_Rect pos; int active; } Obstacle;
 
-    SDL_Window* window = SDL_CreateWindow("Shadow of the Clown - Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, 0);
-    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+int checkCollision(SDL_Rect a, SDL_Rect b){
+    if(a.y+a.h <= b.y) return 0;
+    if(a.y >= b.y+b.h) return 0;
+    if(a.x+a.w <= b.x) return 0;
+    if(a.x >= b.x+b.w) return 0;
+    return 1;
+}
 
-    // --- CHARGEMENT DU DÉCOR PRINCIPAL (MARIO) ---
-    SDL_Surface* surf_bg = IMG_Load("background_jeuvideo.png");
-    SDL_Texture* background_texture = SDL_CreateTextureFromSurface(renderer, surf_bg);
-    SDL_FreeSurface(surf_bg);
+int main()
+{
+    if(SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO)!=0){ printf("SDL Error: %s\n",SDL_GetError()); return 1; }
+    if(IMG_Init(IMG_INIT_PNG|IMG_INIT_JPG)==0){ printf("IMG Error: %s\n",IMG_GetError()); return 1; }
+    if(TTF_Init()==-1){ printf("TTF Error: %s\n",TTF_GetError()); return 1; }
 
-    Minimap m;
-    init_minimap(&m, renderer);
+    SDL_Window *window = SDL_CreateWindow("SDL2 Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_W, SCREEN_H, 0);
+    SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
-    SDL_Rect joueur_reel = {150, 520, 50, 50}; // Positionné sur le sol
-    SDL_Rect camera = {0, 0, 1280, 720};
-    int redimensionnement = 10;
+    SDL_Surface *bgSurf = IMG_Load("bg.jpg");
+    if(!bgSurf){ printf("Erreur bg.jpg: %s\n", IMG_GetError()); return 1; }
+    SDL_Texture *bgTex = SDL_CreateTextureFromSurface(renderer, bgSurf);
+    SDL_FreeSurface(bgSurf);
 
-    bool running = true;
-    SDL_Event e;
+    // Initialisation joueur
+    perso p1;
+    initPerso(&p1, renderer);
 
-    while (running) {
-        while (SDL_PollEvent(&e)) {
-            if (e.type == SDL_QUIT) running = false;
+    // Obstacle
+    Obstacle obstacle = {{400, SCREEN_H - 40, 30, 40}, 1};
+
+    int FPS = 60;
+    int running = 1;
+    SDL_Event event;
+    Uint32 start, dt;
+
+    while(running)
+    {
+        start = SDL_GetTicks();
+
+        // Event
+        while(SDL_PollEvent(&event))
+        {
+            if(event.type == SDL_QUIT) running = 0;
+            if(event.type == SDL_KEYDOWN)
+            {
+                if(event.key.keysym.sym == SDLK_RIGHT) p1.direction = 1;
+                if(event.key.keysym.sym == SDLK_LEFT) p1.direction = 0;
+                if(event.key.keysym.sym == SDLK_SPACE && p1.up==0){ p1.jump_V=-p1.jump_height; p1.up=1; }
+            }
+            if(event.type == SDL_KEYUP)
+            {
+                if(event.key.keysym.sym == SDLK_RIGHT || event.key.keysym.sym == SDLK_LEFT) p1.direction=-1;
+            }
         }
 
-        // Mouvement du joueur
-        const Uint8* state = SDL_GetKeyboardState(NULL);
-        if (state[SDL_SCANCODE_RIGHT]) joueur_reel.x += 5;
-        if (state[SDL_SCANCODE_LEFT])  joueur_reel.x -= 5;
-        if (state[SDL_SCANCODE_DOWN])  joueur_reel.y += 5;
-        if (state[SDL_SCANCODE_UP])    joueur_reel.y -= 5;
+        dt = SDL_GetTicks() - start;
+        deplacerPerso(&p1, dt);
+        animerPerso(&p1);
 
-        // Mise à jour de la minimap
-        MAJminimap(joueur_reel, &m, camera, redimensionnement);
+        if(obstacle.active && checkCollision(p1.posPerso, obstacle.pos)) decreaseLife(&p1);
 
+        // Rendu
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
+        SDL_RenderCopy(renderer, bgTex, NULL, NULL);
 
-        SDL_RenderCopy(renderer, background_texture, NULL, NULL);
+        // obstacle
+        if(obstacle.active){
+            SDL_SetRenderDrawColor(renderer, 255,0,0,255);
+            SDL_RenderFillRect(renderer, &obstacle.pos);
+        }
 
-        afficher(m, renderer);
+        afficherPerso(&p1, renderer);
 
         SDL_RenderPresent(renderer);
-        SDL_Delay(16);
+
+        // Limiter FPS
+        if(1000/FPS > SDL_GetTicks()-start)
+            SDL_Delay(1000/FPS - (SDL_GetTicks()-start));
     }
 
-    // Libération
-    SDL_DestroyTexture(background_texture);
-    free_minimap(&m);
+    freePerso(&p1);
+    SDL_DestroyTexture(bgTex);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
+    TTF_Quit();
     IMG_Quit();
     SDL_Quit();
 
