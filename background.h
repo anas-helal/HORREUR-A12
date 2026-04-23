@@ -2,20 +2,30 @@
 #define BACKGROUND_H
 
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 
 typedef struct {
-    SDL_Texture *img;        
-    SDL_Rect posAbsolue;     // Pour le scrolling 4 sens
-    SDL_Rect posEcran;       
+    SDL_Texture *img1;
+    SDL_Texture *img2;
+
+    SDL_Rect camera1;
+    SDL_Rect camera2;
+
+    SDL_Rect posEcran1;
+    SDL_Rect posEcran2;
+
+    int width1, height1;
+    int width2, height2;
+
 } Background;
 
-// Fonctions demandées par ton lot
-void initBack(Background *b, SDL_Renderer *renderer);
-void afficherBack(Background b, SDL_Renderer *renderer, int mode); // mode 0: mono, 1: multi
-void scrolling(Background *b, int direction); 
-void afficherTemps(SDL_Renderer *renderer, TTF_Font *font, int tempsInitial);
-void libererBack(Background *b);
+void initBackground(Background *b, SDL_Renderer *renderer, char *path);
+void loadBackground1(Background *b, SDL_Renderer *renderer, char *path);
+void loadBackground2(Background *b, SDL_Renderer *renderer, char *path);
+
+void afficherBackground(Background b, SDL_Renderer *renderer, int mode);
+void scrolling(Background *b, int dx, int dy, int numBack);
+
+void afficherInterface(SDL_Renderer *renderer, int score, int vie, int temps, TTF_Font *font);
 
 #endif

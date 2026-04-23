@@ -1,55 +1,92 @@
 #include "background.h"
+#include <SDL2/SDL_image.h>
+#include <stdio.h>
 
-void initBack(Background *b, SDL_Renderer *renderer) {
-    SDL_Surface *surf = IMG_Load("background.png");
-    b->img = SDL_CreateTextureFromSurface(renderer, surf);
+void loadBackground1(Background *b, SDL_Renderer *renderer, char *path)
+{
+    SDL_Surface *surf = IMG_Load(path);
+    b->img1 = SDL_CreateTextureFromSurface(renderer, surf);
+    SDL_QueryTexture(b->img1, NULL, NULL, &b->width1, &b->height1);
     SDL_FreeSurface(surf);
-
-    b->posAbsolue = (SDL_Rect){0, 0, 1280, 720}; 
-    b->posEcran = (SDL_Rect){0, 0, 1280, 720};
 }
 
-void scrolling(Background *b, int direction) {
-    // 0:Droite, 1:Gauche, 2:Haut, 3:Bas
-    int pas = 20; 
-    if (direction == 0) b->posAbsolue.x += pas;
-    if (direction == 1) b->posAbsolue.x -= pas;
-    if (direction == 2) b->posAbsolue.y -= pas;
-    if (direction == 3) b->posAbsolue.y += pas;
+void loadBackground2(Background *b, SDL_Renderer *renderer, char *path)
+{
+    SDL_Surface *surf = IMG_Load(path);
+    b->img2 = SDL_CreateTextureFromSurface(renderer, surf);
+    SDL_QueryTexture(b->img2, NULL, NULL, &b->width2, &b->height2);
+    SDL_FreeSurface(surf);
 }
 
-void afficherBack(Background b, SDL_Renderer *renderer, int mode) {
-    if (mode == 0) {
-        SDL_RenderCopy(renderer, b.img, &b.posAbsolue, &b.posEcran);
-    } else {
-        // Partage d'écran (Split-screen)
-        SDL_Rect v1 = {0, 0, 640, 720};
-        SDL_RenderSetViewport(renderer, &v1);
-        SDL_RenderCopy(renderer, b.img, &b.posAbsolue, NULL);
+void initBackground(Background *b, SDL_Renderer *renderer, char *path)
+{
+    loadBackground1(b, renderer, path);
+    loadBackground2(b, renderer, path);
 
-        SDL_Rect v2 = {640, 0, 640, 720};
-        SDL_RenderSetViewport(renderer, &v2);
-        SDL_RenderCopy(renderer, b.img, &b.posAbsolue, NULL);
-        
-        SDL_RenderSetViewport(renderer, NULL);
+    b->camera1 = (SDL_Rect){0, 0, 640, 720};
+    b->camera2 = (SDL_Rect){0, 0, 640, 720};
+
+    b->posEcran1 = (SDL_Rect){0, 0, 640, 720};
+    b->posEcran2 = (SDL_Rect){640, 0, 640, 720};
+}
+
+void afficherBackground(Background b, SDL_Renderer *renderer, int mode)
+{
+    if(mode == 0)
+    {
+        SDL_RenderCopy(renderer, b.img1, &b.camera1, NULL);
+    }
+    else
+    {
+        SDL_RenderCopy(renderer, b.img1, &b.camera1, &b.posEcran1);
+        SDL_RenderCopy(renderer, b.img2, &b.camera2, &b.posEcran2);
     }
 }
 
-void afficherTemps(SDL_Renderer *renderer, TTF_Font *font, int tempsInitial) {
-    int s = (SDL_GetTicks() - tempsInitial) / 1000;
-    char txt[20];
-    sprintf(txt, "Temps: %d s", s);
+void scrolling(Background *b, int dx, int dy, int numBack)
+{
+    SDL_Rect *cam;
+    int width, height;
 
-    SDL_Color noir = {0, 0, 0};
-    SDL_Surface *surf = TTF_RenderText_Blended(font, txt, noir);
-    SDL_Texture *tex = SDL_CreateTextureFromSurface(renderer, surf);
-    SDL_Rect r = {1100, 20, surf->w, surf->h};
+    if(numBack == 1)
+    {
+        cam = &b->camera1;
+        width = b->width1;
+        height = b->height1;
+    }
+    else
+    {
+        cam = &b->camera2;
+        width = b->width2;
+        height = b->height2;
+    }
 
-    SDL_RenderCopy(renderer, tex, NULL, &r);
-    SDL_FreeSurface(surf);
-    SDL_DestroyTexture(tex);
+    cam->x += dx;
+    cam->y += dy;
+
+    if(cam->x < 0) cam->x = 0;
+    if(cam->y < 0) cam->y = 0;
+
+    if(cam->x > width - cam->w)
+        cam->x = width - cam->w;
+
+    if(cam->y > height - cam->h)
+        cam->y = height - cam->h;
 }
 
-void libererBack(Background *b) {
-    SDL_DestroyTexture(b->img);
+void afficherInterface(SDL_Renderer *renderer, int score, int vie, int temps, TTF_Font *font)
+{
+    SDL_Color color = {255,255,255};
+
+    char texte[100];
+    sprintf(texte, "Score:%d Vie:%d Temps:%d", score, vie, temps);
+
+    SDL_Surface *surf = TTF_RenderText_Blended(font, texte, color);
+    SDL_Texture *tex = SDL_CreateTextureFromSurface(renderer, surf);
+
+    SDL_Rect pos = {20, 20, surf->w, surf->h};
+
+    SDL_FreeSurface(surf);
+    SDL_RenderCopy(renderer, tex, NULL, &pos);
+    SDL_DestroyTexture(tex);
 }
