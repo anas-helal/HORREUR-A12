@@ -3,7 +3,7 @@
 void initPerso(perso *p, SDL_Renderer *renderer)
 {
     p->heartTex = NULL; 
-    SDL_Surface *temp = IMG_Load("sprite sheet.png");
+    SDL_Surface *temp = IMG_Load("sprites_final.png");
     int i;
     char filename[20];
     SDL_Surface *heartSurf;
@@ -33,10 +33,10 @@ void initPerso(perso *p, SDL_Renderer *renderer)
     p->police = TTF_OpenFont("font.ttf", 24);
     if(!p->police) return;
 
-    p->posPerso.w = 78;
-    p->posPerso.h = 51;
+    p->posPerso.w = 105;
+    p->posPerso.h = 108;
     p->posPerso.x = 100;
-    p->posPerso.y = SCREEN_H - 100;
+    p->posPerso.y = SCREEN_H - 120;
     
     p->posVie.x = 10;
     p->posVie.y = 20;
@@ -48,8 +48,8 @@ void initPerso(perso *p, SDL_Renderer *renderer)
     p->posScore.w = 0;
     p->posScore.h = 0;
 
-    p->posSprite.w = 52;
-    p->posSprite.h = 34;
+    p->posSprite.w = 105;
+    p->posSprite.h = 108;
     p->posSprite.x = 0;
     p->posSprite.y = 0;
 
@@ -121,7 +121,7 @@ void afficherPerso(perso *p, SDL_Renderer *renderer)
 
     if(p->direction != -1 || p->isAttacking){
         p->frame++;
-        if(p->frame >= 6) p->frame = 0;
+        if(p->frame >= 4) p->frame = 0;
     } else {
         p->frame = 0;
     }
@@ -148,21 +148,19 @@ void deplacerPerso(perso *p, Uint32 dt)
 void animerPerso(perso *p)
 {
     int row;
-    if(p->isAttacking)
-        row = (p->direction == 0) ? 3 : 2;
-    else if(p->direction == 1)
+    if(p->direction == 1)
         row = 0;
     else if(p->direction == 0)
-        row = 1;
+        row = 3;
     else {
         row = 0; 
         p->frame = 0; 
     }
 
-    p->posSprite.x = 52 * p->frame;
-    p->posSprite.y = 34 * row;
-    p->posSprite.w = 52;
-    p->posSprite.h = 34;
+    p->posSprite.x = 105 * p->frame;
+    p->posSprite.y = 108 * row;
+    p->posSprite.w = 105;
+    p->posSprite.h = 108;
 }
 
 void attaquerPerso(perso *p)
