@@ -10,11 +10,12 @@
 
 #define SCREEN_H 400
 #define SCREEN_W 900
-#define MAX_LIVES 5
+#define MAX_LIVES 4
 
 typedef struct
 {
     SDL_Texture *spriteTex;
+    SDL_Texture *heartTex;
     SDL_Texture *viesTex[MAX_LIVES];
 
     SDL_Rect posPerso;
@@ -42,18 +43,16 @@ typedef struct
     float acceleration;
 
     int isActive;
+    int isRunning;
+    int isAttacking;
 
 } perso;
 
-// Fonctions SDL2
 void initPerso(perso *p, SDL_Renderer *renderer);
+void initialiserJoueur2(perso *p, SDL_Renderer *renderer);
 void afficherPerso(perso *p, SDL_Renderer *renderer);
 void deplacerPerso(perso *p, Uint32 dt);
 void animerPerso(perso *p);
-void freePerso(perso *p);
-void ajouterPerso(perso *p, SDL_Renderer *renderer);
-void updateScore(perso *p, Uint32 currentTime);
-void updateLifeBar(perso *p);
-void decreaseLife(perso *p);
+void attaquerPerso(perso *p);
 
 #endif
