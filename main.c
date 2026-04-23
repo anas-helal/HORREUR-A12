@@ -1,83 +1,13 @@
-#include "person.h"
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_ttf.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include "enemy.h"
 
-typedef struct { SDL_Rect pos; int active; } Obstacle;
+#define HERO_START_X 80
+#define HERO_START_Y 500
+#define ENNEMI_FRAME_W 390
+#define ENNEMI_FRAME_H 432
 
-int checkCollision(SDL_Rect a, SDL_Rect b){
-    if(a.y+a.h <= b.y) return 0;
-    if(a.y >= b.y+b.h) return 0;
-    if(a.x+a.w <= b.x) return 0;
-    if(a.x >= b.x+b.w) return 0;
-    return 1;
-}
-
-void afficherGagnant(SDL_Renderer *renderer, TTF_Font *police, int gagnant){
-    SDL_Event ev;
-    int attente = 1;
-    Uint32 debut = SDL_GetTicks();
-    char msg[40];
-    SDL_Color blanc = {255,255,255,255};
-    SDL_Color jaune = {255,215,0,255};
-    SDL_Surface *surf;
-    SDL_Texture *tex;
-    SDL_Rect dst;
-    int alpha;
-    Uint32 now;
-
-    sprintf(msg, "Joueur %d Gagne !", gagnant);
-
-    while(attente){
-        while(SDL_PollEvent(&ev)){
-            if(ev.type==SDL_QUIT) attente=0;
-            if(ev.type==SDL_KEYDOWN) attente=0;
-        }
-        now = SDL_GetTicks() - debut;
-        alpha = (int)(128 + 127 * SDL_sinf((float)now / 400.0f));
-        if(alpha<0) alpha=0; if(alpha>255) alpha=255;
-
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 200);
-        SDL_RenderClear(renderer);
-
-        SDL_SetRenderDrawColor(renderer, 20, 20, 40, 255);
-        SDL_Rect fond = {SCREEN_W/2-250, SCREEN_H/2-100, 500, 200};
-        SDL_RenderFillRect(renderer, &fond);
-        SDL_SetRenderDrawColor(renderer, 255, 215, 0, 255);
-        SDL_RenderDrawRect(renderer, &fond);
-
-        surf = TTF_RenderText_Blended(police, msg, jaune);
-        if(surf){
-            tex = SDL_CreateTextureFromSurface(renderer, surf);
-            SDL_FreeSurface(surf);
-            SDL_SetTextureAlphaMod(tex, (Uint8)alpha);
-            SDL_QueryTexture(tex, NULL, NULL, &dst.w, &dst.h);
-            dst.x = SCREEN_W/2 - dst.w/2;
-            dst.y = SCREEN_H/2 - dst.h/2 - 20;
-            SDL_RenderCopy(renderer, tex, NULL, &dst);
-            SDL_DestroyTexture(tex);
-        }
-
-        surf = TTF_RenderText_Blended(police, "Appuyez sur une touche pour quitter", blanc);
-        if(surf){
-            tex = SDL_CreateTextureFromSurface(renderer, surf);
-            SDL_FreeSurface(surf);
-            SDL_QueryTexture(tex, NULL, NULL, &dst.w, &dst.h);
-            dst.x = SCREEN_W/2 - dst.w/2;
-            dst.y = SCREEN_H/2 + 40;
-            SDL_RenderCopy(renderer, tex, NULL, &dst);
-            SDL_DestroyTexture(tex);
-        }
-
-        SDL_RenderPresent(renderer);
-        SDL_Delay(16);
-    }
-}
-
-int main()
+static void remplir_niveau(EntityManager *manager, int level, SDL_Texture *enemy_tex)
 {
+<<<<<<< Updated upstream
     SDL_Window *window;
     SDL_Texture *bgTex, *obsTex;
     SDL_Surface *bgSurf, *obsSurf;
@@ -88,131 +18,272 @@ int main()
     SDL_Event event;
     Uint32 start, dt, lastTime, c1_cd = 0, c2_cd = 0;
     int i;
+=======
+    manager->count = 0;
+    manager->enemy_count = 0;
+    manager->powerup_count = 0;
+>>>>>>> Stashed changes
 
-    if(SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO)!=0){ printf("SDL_Init Error: %s\n", SDL_GetError()); return 1; }
-    if(IMG_Init(IMG_INIT_PNG|IMG_INIT_JPG)==0){ printf("IMG_Init Error: %s\n", IMG_GetError()); return 1; }
-    if(TTF_Init()==-1){ printf("TTF_Init Error: %s\n", TTF_GetError()); return 1; }
+    int enemy_total = (level == LEVEL1) ? 3 : 4;
+    SDL_Point pos_lvl1[] = {{760, 430}, {980, 470}, {860, 450}};
+    SDL_Point pos_lvl2[] = {{700, 400}, {900, 450}, {1050, 420}, {830, 500}};
 
-    window = SDL_CreateWindow("SDL2 Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_W, SCREEN_H, 0);
-    // Force SOFTWARE pour compatibilité VM
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
-    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-
-    bgSurf = IMG_Load("bg.jpg");
-    if(!bgSurf){ printf("Erreur chargement bg.jpg\n"); return 1; }
-    bgTex = SDL_CreateTextureFromSurface(renderer, bgSurf);
-    SDL_FreeSurface(bgSurf);
-
-    obsSurf = IMG_Load("obstacle-removebg-preview.png");
-    if(obsSurf){
-        obsTex = SDL_CreateTextureFromSurface(renderer, obsSurf);
-        SDL_FreeSurface(obsSurf);
-    } else {
-        printf("Erreur chargement obstacle image\n");
-        obsTex = NULL;
+    for (int i = 0; i < enemy_total; i++)
+    {
+        NPC *e = &manager->entities[manager->count++];
+        initAfficherNPC(e, level);
+        if (level == LEVEL1)
+        {
+            e->rect.x = pos_lvl1[i].x;
+            e->rect.y = pos_lvl1[i].y;
+        }
+        else
+        {
+            e->rect.x = pos_lvl2[i].x;
+            e->rect.y = pos_lvl2[i].y;
+        }
+        e->sprite = enemy_tex;
+        manager->enemy_count++;
     }
 
-    initPerso(&p1, renderer);
-    initialiserJoueur2(&p2, renderer);
+    NPC *p1 = &manager->entities[manager->count++];
+    memset(p1, 0, sizeof(*p1));
+    p1->type = POWERUP;
+    p1->rect = (SDL_Rect){520, 430, 30, 30};
+    p1->active = 1;
+    p1->damage = 1;
 
-    obstacle.pos.w = 60; 
-    obstacle.pos.h = 60;
-    obstacle.pos.x = 400; 
-    obstacle.pos.y = SCREEN_H - obstacle.pos.h - 20; 
-    obstacle.active = 1;
+    NPC *p2 = &manager->entities[manager->count++];
+    memset(p2, 0, sizeof(*p2));
+    p2->type = POWERUP;
+    p2->rect = (SDL_Rect){620, 480, 30, 30};
+    p2->active = 1;
+    p2->damage = 2;
+    manager->powerup_count = 2;
+}
 
-    lastTime = SDL_GetTicks();
-
-    while(running)
+static void process_collisions(EntityManager *manager, SDL_Rect hero_rect, EntityType type,
+    int *player_health, int *score, Uint32 *last_hit_time, Uint32 cooldown_ms)
+{
+    for (int i = 0; i < manager->count; i++)
     {
-        start = SDL_GetTicks();
-        dt = start - lastTime;
-        lastTime = start;
+        Entity *e = &manager->entities[i];
+        if (!e->active || e->type != type) continue;
 
-        while(SDL_PollEvent(&event))
+        if (!collisionBB(hero_rect, e->rect)) continue;
+
+        if (type == ENEMY)
         {
-            if(event.type == SDL_QUIT) running = 0;
-            if(event.type == SDL_KEYDOWN)
+            Uint32 now = SDL_GetTicks();
+            if (now - *last_hit_time >= cooldown_ms)
             {
-                if(event.key.keysym.sym == SDLK_RIGHT) p1.direction = 1;
-                else if(event.key.keysym.sym == SDLK_LEFT) p1.direction = 0;
-                else if(event.key.keysym.sym == SDLK_SPACE && p1.up==0){ p1.jump_V=-15; p1.up=1; }
-                else if(event.key.keysym.sym == SDLK_LSHIFT) p1.isRunning = 1;
-                else if(event.key.keysym.sym == SDLK_LCTRL) attaquerPerso(&p1);
-
-                if(event.key.keysym.sym == SDLK_d) p2.direction = 1;
-                else if(event.key.keysym.sym == SDLK_a) p2.direction = 0;
-                else if(event.key.keysym.sym == SDLK_w && p2.up==0){ p2.jump_V=-15; p2.up=1; }
-                else if(event.key.keysym.sym == SDLK_r) p2.isRunning = 1;
-                else if(event.key.keysym.sym == SDLK_t) attaquerPerso(&p2);
-            }
-            if(event.type == SDL_KEYUP)
-            {
-                if(event.key.keysym.sym == SDLK_RIGHT && p1.direction == 1) p1.direction=-1;
-                if(event.key.keysym.sym == SDLK_LEFT && p1.direction == 0) p1.direction=-1;
-                if(event.key.keysym.sym == SDLK_LSHIFT) p1.isRunning = 0;
-                
-                if(event.key.keysym.sym == SDLK_d && p2.direction == 1) p2.direction=-1;
-                if(event.key.keysym.sym == SDLK_a && p2.direction == 0) p2.direction=-1;
-                if(event.key.keysym.sym == SDLK_r) p2.isRunning = 0;
+                *player_health -= e->damage;
+                e->health -= 15;
+                gestionSanteNPC(e, NULL);
+                *last_hit_time = now;
             }
         }
-
-        deplacerPerso(&p1, dt); animerPerso(&p1);
-        deplacerPerso(&p2, dt); animerPerso(&p2);
-
-        if(obstacle.active && checkCollision(p1.posPerso, obstacle.pos)) {
-            if(SDL_GetTicks() > c1_cd) { p1.vie--; c1_cd = SDL_GetTicks() + 1000; }
+        else
+        {
+            if (e->damage == 1)
+            {
+                *player_health += 20;
+                if (*player_health > 100) *player_health = 100;
+            }
+            else if (e->damage == 2)
+            {
+                *score += 50;
+            }
+            e->active = 0;
         }
-        if(obstacle.active && checkCollision(p2.posPerso, obstacle.pos)) {
-            if(SDL_GetTicks() > c2_cd) { p2.vie--; c2_cd = SDL_GetTicks() + 1000; }
+    }
+}
+
+static void mettre_a_jour_et_animer(EntityManager *manager, int level, SDL_Rect hero_rect)
+{
+    for (int i = 0; i < manager->count; i++)
+    {
+        NPC *e = &manager->entities[i];
+        if (!e->active || e->type != ENEMY) continue;
+
+
+        int distance_x = hero_rect.x - e->rect.x;
+        if (distance_x < -140 || distance_x > 140)
+        {
+            deplacementNPC(e, level);
+            animationNPC(e, e->direction);
+        }
+        else
+        {
+            if (distance_x < 0) animationNPC(e, 3); 
+            else animationNPC(e, 4);                
+        }
+    }
+}
+
+static void afficher_entites(EntityManager *manager, SDL_Renderer *renderer)
+{
+    for (int i = 0; i < manager->count; i++)
+    {
+        NPC *e = &manager->entities[i];
+        if (!e->active) continue;
+
+        if (e->type == POWERUP)
+        {
+            continue;
         }
 
-        if(p1.direction != -1) p1.score++;
-        if(p2.direction != -1) p2.score++;
+        if (e->sprite)
+        {
+            int row = 0;
+            int col = e->frame % 10;
+            if (e->direction == 2) row = 1;
+            else if (e->direction == 3) row = 2;
+            else if (e->direction == 4) row = 3;
+            SDL_Rect src = {col * ENNEMI_FRAME_W, row * ENNEMI_FRAME_H, ENNEMI_FRAME_W, ENNEMI_FRAME_H};
+            SDL_RenderCopy(renderer, e->sprite, &src, &e->rect);
+        }
+        else
+        {
+            SDL_SetRenderDrawColor(renderer, 220, 60, 60, 255);
+            SDL_RenderFillRect(renderer, &e->rect);
+        }
 
-        if(p1.vie < 0 || p2.vie < 0) running = 0;
+        gestionSanteNPC(e, renderer);
+    }
+}
 
+int main(void)
+{
+    const int SCREEN_WIDTH = 1200;
+    const int SCREEN_HEIGHT = 720;
+    srand((unsigned int)time(NULL));
 
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    bool running = true;
+    SDL_Event event;
+    int current_level = LEVEL1;
+    int player_health = 100;
+    Uint32 last_hit_time = 0;
+    const Uint32 hit_cooldown_ms = 400;
+    int score = 0;
+    int image_ok = 0;
+
+    if (SDL_Init(SDL_INIT_VIDEO) != 0) return 1;
+#if __has_include(<SDL2/SDL_image.h>) || __has_include(<SDL_image.h>)
+    if (IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG) & (IMG_INIT_PNG | IMG_INIT_JPG)) image_ok = 1;
+#endif
+
+    SDL_Window *window = SDL_CreateWindow("", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+        SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+    if (!window) return 1;
+
+    SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    if (!renderer) return 1;
+
+    SDL_Texture *bg = NULL;
+    SDL_Texture *hero = NULL;
+    SDL_Texture *enemy_tex = NULL;
+    if (image_ok)
+    {
+        bg = IMG_LoadTexture(renderer, "Assets/graphic/stages/Background.jpg");
+        hero = IMG_LoadTexture(renderer, "Assets/graphic/hero/hero_test.png");
+        enemy_tex = IMG_LoadTexture(renderer, "Assets/graphic/enemy/ennemie.png");
+        if (!enemy_tex) enemy_tex = IMG_LoadTexture(renderer, "Assets/graphic/enemy/enemy.png");
+    }
+
+    SDL_Rect hero_rect = {HERO_START_X, HERO_START_Y, 120, 150};
+
+    EntityManager manager;
+    memset(&manager, 0, sizeof(manager));
+    remplir_niveau(&manager, LEVEL1, enemy_tex);
+
+    while (running)
+    {
+        while (SDL_PollEvent(&event))
+        {
+            if (event.type == SDL_QUIT) running = false;
+            if (event.type == SDL_KEYDOWN)
+            {
+                switch (event.key.keysym.sym)
+                {
+                case SDLK_ESCAPE:
+                    running = false;
+                    break;
+                case SDLK_RIGHT:
+                    hero_rect.x += 20;
+                    if (hero_rect.x > SCREEN_WIDTH - hero_rect.w) hero_rect.x = SCREEN_WIDTH - hero_rect.w;
+                    break;
+                case SDLK_LEFT:
+                    hero_rect.x -= 20;
+                    if (hero_rect.x < 0) hero_rect.x = 0;
+                    break;
+                case SDLK_UP:
+                    hero_rect.y -= 20;
+                    if (hero_rect.y < 0) hero_rect.y = 0;
+                    break;
+                case SDLK_DOWN:
+                    hero_rect.y += 20;
+                    if (hero_rect.y > SCREEN_HEIGHT - hero_rect.h) hero_rect.y = SCREEN_HEIGHT - hero_rect.h;
+                    break;
+                case SDLK_l:
+                    current_level = (current_level == LEVEL1) ? LEVEL2 : LEVEL1;
+                    remplir_niveau(&manager, current_level, enemy_tex);
+                    hero_rect.x = HERO_START_X;
+                    hero_rect.y = HERO_START_Y;
+                    break;
+                }
+            }
+        }
+
+        mettre_a_jour_et_animer(&manager, current_level, hero_rect);
+        process_collisions(&manager, hero_rect, ENEMY, &player_health, &score, &last_hit_time, hit_cooldown_ms);
+        process_collisions(&manager, hero_rect, POWERUP, &player_health, &score, &last_hit_time, hit_cooldown_ms);
+
+        if (player_health <= 0)
+        {
+            player_health = 100;
+            hero_rect.x = HERO_START_X;
+            hero_rect.y = HERO_START_Y;
+        }
+
+        SDL_SetRenderDrawColor(renderer, 18, 18, 35, 255);
         SDL_RenderClear(renderer);
-        SDL_RenderCopy(renderer, bgTex, NULL, NULL);
-
-        if(obstacle.active){ 
-            if(obsTex) SDL_RenderCopy(renderer, obsTex, NULL, &obstacle.pos);
-            else { SDL_SetRenderDrawColor(renderer, 255,0,0,255); SDL_RenderFillRect(renderer, &obstacle.pos); }
+        if (bg)
+        {
+            SDL_Rect bg_dest = {-40, 0, SCREEN_WIDTH + 80, SCREEN_HEIGHT};
+            SDL_RenderCopy(renderer, bg, NULL, &bg_dest);
+ 
+        }
+        else
+        {
+            SDL_SetRenderDrawColor(renderer, 40, 180, 90, 255);
+            SDL_RenderFillRect(renderer, &(SDL_Rect){0, SCREEN_HEIGHT - 120, SCREEN_WIDTH, 120});
         }
 
-        afficherPerso(&p1, renderer);
-        afficherPerso(&p2, renderer);
+        if (hero) SDL_RenderCopy(renderer, hero, NULL, &hero_rect);
+        else
+        {
+            SDL_SetRenderDrawColor(renderer, 60, 150, 240, 255);
+            SDL_RenderFillRect(renderer, &hero_rect);
+        }
+        afficher_entites(&manager, renderer);
+
+        SDL_Rect hp = {20, 20, (player_health * 2), 18};
+        SDL_SetRenderDrawColor(renderer, 180, 0, 0, 255);
+        SDL_RenderFillRect(renderer, &hp);
 
         SDL_RenderPresent(renderer);
-
-        // Délai manuel stable (60 FPS) pour éviter le clignotement VMware
-        if(16 > (SDL_GetTicks() - start)) SDL_Delay(16 - (SDL_GetTicks() - start));
     }
 
-    {
-        int gagnant = 0;
-        TTF_Font *fontFin = TTF_OpenFont("font.ttf", 48);
-        if(!fontFin) fontFin = p1.police;
-        if(p1.vie < 0) gagnant = 2;
-        else if(p2.vie < 0) gagnant = 1;
-        if(gagnant > 0 && fontFin)
-            afficherGagnant(renderer, fontFin, gagnant);
-        if(fontFin && fontFin != p1.police) TTF_CloseFont(fontFin);
-    }
-
-    if(p1.spriteTex) SDL_DestroyTexture(p1.spriteTex);
-    if(p1.heartTex) SDL_DestroyTexture(p1.heartTex);
-    for(i=0; i<MAX_LIVES; i++) if(p1.viesTex[i]) SDL_DestroyTexture(p1.viesTex[i]);
-    if(p1.police) TTF_CloseFont(p1.police);
-    if(p2.spriteTex) SDL_DestroyTexture(p2.spriteTex);
-    if(p2.heartTex) SDL_DestroyTexture(p2.heartTex);
-    for(i=0; i<MAX_LIVES; i++) if(p2.viesTex[i]) SDL_DestroyTexture(p2.viesTex[i]);
-    if(p2.police) TTF_CloseFont(p2.police);
-    if(obsTex) SDL_DestroyTexture(obsTex);
-    SDL_DestroyTexture(bgTex); SDL_DestroyRenderer(renderer); SDL_DestroyWindow(window);
-    TTF_Quit(); IMG_Quit(); SDL_Quit();
+    (void)manager;
+    if (enemy_tex) SDL_DestroyTexture(enemy_tex);
+    if (hero) SDL_DestroyTexture(hero);
+    if (bg) SDL_DestroyTexture(bg);
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+#if __has_include(<SDL2/SDL_image.h>) || __has_include(<SDL_image.h>)
+    if (image_ok) IMG_Quit();
+#endif
+    SDL_Quit();
     return 0;
 }
