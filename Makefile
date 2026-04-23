@@ -1,18 +1,18 @@
+all: run
 
-CC = gcc
-CFLAGS = -g `sdl2-config --cflags`
-LDFLAGS = `sdl2-config --libs` -lSDL2_image -lSDL2_ttf -lSDL2_mixer
+prog: main.o enemy.o
+	gcc main.o enemy.o `sdl2-config --libs` -lSDL2_image -o prog -g
 
-OBJS = main.o person.o
-TARGET = prog
+main.o: main.c enemy.h
+	gcc -c main.c -g `sdl2-config --cflags`
 
-all: $(TARGET)
-
-$(TARGET): $(OBJS)
-	$(CC) -o $@ $^ $(LDFLAGS)
-
-%.o: %.c
-	$(CC) -c $< $(CFLAGS)
+enemy.o: enemy.c enemy.h
+	gcc -c enemy.c -g `sdl2-config --cflags`
 
 clean:
-	rm -f $(OBJS) $(TARGET)
+	rm -f *.o prog
+
+run: prog
+	./prog
+
+.PHONY: all run clean
